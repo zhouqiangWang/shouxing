@@ -10,6 +10,7 @@
   "dependencies": {
       "redis": "*",
       "koa": "*",
-      "q": "*"
+      "q": "*",
+      "koa-bodyparser": "*"
   }
 }

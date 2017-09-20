@@ -5,11 +5,13 @@
 // redisClient.setValue("today", "Friday");
 // redisClient.getValue("today");
 const Koa = require('koa');
+var bodyParser = require('koa-bodyparser');
 const app = new Koa();
+
 const crypto = require('crypto');
-const hash = crypto.createHash('sha1');
 
 const WeixinTokenAPI = require("./business/WeixinTokenAPI");
+const WeixinMenu = require("./business/WeixinMenu");
 const WEIXIN_TOKEN = "wang";
 
 // x-response-time
@@ -29,14 +31,16 @@ function isValid(options) {
   params.sort();
   console.log("params : ", params);
   let paramStr = params[0] + params[1] + params[2];
+  let hash = crypto.createHash('sha1');
   hash.update(paramStr);
   let hashStr = hash.digest("hex");
 
   return hashStr === options.signature;
 }
+app.use(bodyParser());
 
 app.use(async ctx => {
-    console.log("request :: " + ctx.path + ", query = " + JSON.stringify(ctx.query) + ", request = " + JSON.stringify(ctx.request));
+    console.log("request : " + ctx.path + ", query = " + JSON.stringify(ctx.query) + ", request = " + JSON.stringify(ctx.request));
     let resp = "I want you";
 
     // test data
@@ -46,15 +50,18 @@ app.use(async ctx => {
     // ctx.query.echostr = "10283289359637544635";
     switch (ctx.path) {
         case "/menu":
-            let token = await WeixinTokenAPI.getAccessToken();
-            resp = token;
-            console.log("token = ", token);
+            let response = await WeixinMenu.postMenu();
+            resp = response;
+            console.log("menu resp = ", response);
             break;
         case "/echo":
             if (isValid(ctx.query)) {
                 resp = ctx.query.echostr;
             }
             break;
+        case "/message":
+          resp = ctx.request.body;
+          break;
         default:
             console.log("route into default. path = " + ctx.path);
     }
